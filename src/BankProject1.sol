@@ -3,6 +3,7 @@ pragma solidity ^0.8.30;
 
 contract BankProject1 {
     uint256 totalAmountInBank;
+    uint userBalance = differentAccounts[msg.sender].balance;
 
     struct Accounts {
         string name;
@@ -39,15 +40,15 @@ contract BankProject1 {
         // first user pulls out his account
         checkAccounts();
         checkValues();
-        differentAccounts[msg.sender].balance += msg.value;
+        userBalance += msg.value;
         totalAmountInBank += msg.value;
     }
 
     function userWithdraw(uint256 _amount) public {
         // user withdraw from their balance
         checkAccounts();
-        require(differentAccounts[msg.sender].balance >= _amount, "Insufficient balance");
-        differentAccounts[msg.sender].balance -= _amount;
+        require(userBalance >= _amount, "Insufficient balance");
+        userBalance -= _amount;
         totalAmountInBank -= _amount;
         (bool isWithdrawn,) = payable(msg.sender).call{value: _amount}("");
         require(isWithdrawn, "Failed to withdraw");
@@ -58,14 +59,18 @@ contract BankProject1 {
     function transferToUser(address _to, uint256 _amount) public {
         checkAccounts();
         require(differentAccounts[_to].accountStatus == true, "Account not found");
-        require(differentAccounts[msg.sender].balance >= _amount, "Insufficient balance");
-        differentAccounts[msg.sender].balance -= _amount;
+        require(userBalance >= _amount, "Insufficient balance");
+        userBalance -= _amount;
         differentAccounts[_to].balance += _amount;
     }
 
     function closeAccount() public {
         checkAccounts();
-        totalAmountInBank -= differentAccounts[msg.sender].balance;
+        totalAmountInBank -= userBalance;
         delete differentAccounts[msg.sender];
+    }
+
+    function getTotalBalanceInBank() public view returns (uint256) {
+        return totalAmountInBank;
     }
 }
